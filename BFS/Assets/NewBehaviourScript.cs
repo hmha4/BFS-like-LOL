@@ -69,7 +69,7 @@ public class NewBehaviourScript : MonoBehaviour
         direction[5] = mapSize - 1;
         direction[6] = mapSize;
         direction[7] = mapSize + 1;
-
+        graph[(int)transform.position.y, (int)transform.position.x].gameObject.SetActive(false);
         StartCoroutine(Move());
     }
 
@@ -91,9 +91,7 @@ public class NewBehaviourScript : MonoBehaviour
         
         if (Input.GetButtonDown("Fire1"))
         {
-            hash.Clear();
-            q.Clear();
-            hashStack.Clear();
+            
             mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Input.mousePosition.z));
             for (int i = 0; i < mapSize; i++)
             {
@@ -102,10 +100,17 @@ public class NewBehaviourScript : MonoBehaviour
                     if (mousePos.x > i - .5f && mousePos.x < i + .5f &&
                         mousePos.y < j + .5f && mousePos.y > j - .5f)
                     {
-                        startPos = ReturnCellNumber((int)transform.position.y, (int)transform.position.x);
-                        goalPos = ReturnCellNumber(j, i);
+                        if (graph[j, i].gameObject.activeSelf == false)
+                        {
+                            hash.Clear();
+                            q.Clear();
+                            hashStack.Clear();
 
-                        BFS(startPos, goalPos);
+                            startPos = ReturnCellNumber((int)transform.position.y, (int)transform.position.x);
+                            goalPos = ReturnCellNumber(j, i);
+                            
+                            BFS(startPos, goalPos);
+                        }
                     }
                 }
             }
@@ -213,7 +218,7 @@ public class NewBehaviourScript : MonoBehaviour
                 poppedStack = hashStack.Pop();
                 transform.position = new Vector3(poppedStack % mapSize, poppedStack / mapSize, 0);
             }
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.1f);
         }
     }
 }

@@ -7,7 +7,6 @@ public class MapGenerator : MonoBehaviour {
     NewBehaviourScript map;
     private Vector2 mousePos;
     Rect rect;
-    int[, ] cellNum = new int[10, 10];
 
     void Awake()
     {
@@ -21,8 +20,17 @@ public class MapGenerator : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        
-        if(Input.GetButtonDown("Fire1"))
+        for (int i = 0; i < map.mapSize; i++)
+        {
+            for (int j = 0; j < map.mapSize; j++)
+            {
+                Debug.DrawLine(new Vector3(i - .5f, j - .5f, 0), new Vector3(i + .5f, j - .5f, 0), Color.blue);
+                Debug.DrawLine(new Vector3(i - .5f, j - .5f, 0), new Vector3(i - .5f, j + .5f, 0), Color.blue);
+                Debug.DrawLine(new Vector3(i - .5f, j + .5f, 0), new Vector3(i + .5f, j + .5f, 0), Color.blue);
+                Debug.DrawLine(new Vector3(i + .5f, j + .5f, 0), new Vector3(i + .5f, j - .5f, 0), Color.blue);
+            }
+        }
+        if (Input.GetButtonDown("Fire1"))
         {
             mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Input.mousePosition.z));
             for (int i = 0; i < map.mapSize; i++)
@@ -32,11 +40,22 @@ public class MapGenerator : MonoBehaviour {
                     if (mousePos.x > i - .5f && mousePos.x < i + .5f &&
                         mousePos.y < j + .5f && mousePos.y > j - .5f)
                     {
-                        Debug.DrawLine(new Vector3(i - .5f, j - .5f, 0), new Vector3(i + .5f, j - .5f, 0), Color.red, 1);
-                        Debug.DrawLine(new Vector3(i - .5f, j - .5f, 0), new Vector3(i - .5f, j + .5f, 0), Color.red, 1);
-                        Debug.DrawLine(new Vector3(i - .5f, j + .5f, 0), new Vector3(i + .5f, j + .5f, 0), Color.red, 1);
-                        Debug.DrawLine(new Vector3(i + .5f, j + .5f, 0), new Vector3(i + .5f, j - .5f, 0), Color.red, 1);
+                        if (map.graph[j, i].gameObject.activeSelf == true)
+                        {
+                            Debug.DrawLine(new Vector3(i - .5f, j - .5f, 0), new Vector3(i + .5f, j - .5f, 0), Color.yellow, 1);
+                            Debug.DrawLine(new Vector3(i - .5f, j - .5f, 0), new Vector3(i - .5f, j + .5f, 0), Color.yellow, 1);
+                            Debug.DrawLine(new Vector3(i - .5f, j + .5f, 0), new Vector3(i + .5f, j + .5f, 0), Color.yellow, 1);
+                            Debug.DrawLine(new Vector3(i + .5f, j + .5f, 0), new Vector3(i + .5f, j - .5f, 0), Color.yellow, 1);
+                        }
+                        else
+                        {
+                            Debug.DrawLine(new Vector3(i - .5f, j - .5f, 0), new Vector3(i + .5f, j - .5f, 0), Color.red, 1);
+                            Debug.DrawLine(new Vector3(i - .5f, j - .5f, 0), new Vector3(i - .5f, j + .5f, 0), Color.red, 1);
+                            Debug.DrawLine(new Vector3(i - .5f, j + .5f, 0), new Vector3(i + .5f, j + .5f, 0), Color.red, 1);
+                            Debug.DrawLine(new Vector3(i + .5f, j + .5f, 0), new Vector3(i + .5f, j - .5f, 0), Color.red, 1);
+                        }
                     }
+                    
                 }
             }
         }  

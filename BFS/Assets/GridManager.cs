@@ -15,22 +15,45 @@ public class GridManager : MonoBehaviour {
     {
         if (Input.GetButtonDown("Fire2"))
         {
-            mousePos = Camera.main.ScreenToWorldPoint(new Vector2(Input.mousePosition.x, Input.mousePosition.y));
-
-            for (int i = 0; i < map.mapSize; i++)
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit))
             {
-                for (int j = 0; j < map.mapSize; j++)
+                if (hit.collider.gameObject.name == "ground(Clone)")
                 {
-                    if (mousePos.x > i - .5f && mousePos.x < i + .5f &&
-                        mousePos.y < j + .5f && mousePos.y > j - .5f)
+                    for (int i = 0; i < map.mapSize; i++)
                     {
-                        if(map.graph[j, i].gameObject.activeSelf == false)
-                            map.graph[j, i].gameObject.SetActive(true);
-                        else
-                            map.graph[j, i].gameObject.SetActive(false);
+                        for (int j = 0; j < map.mapSize; j++)
+                        {
+                            if (hit.point.x > i - .5f && hit.point.x < i + .5f &&
+                                hit.point.y < j + .5f && hit.point.y > j - .5f)
+                            {
+                                if (map.graph[j, i].gameObject.activeSelf == false)
+                                    map.graph[j, i].gameObject.SetActive(true);
+                                else
+                                    map.graph[j, i].gameObject.SetActive(false);
+                            }
+                        }
                     }
                 }
-            }
+            }    
         }
     }
 }
+
+//mousePos = Camera.main.ScreenToWorldPoint(new Vector2(Input.mousePosition.x, Input.mousePosition.y));
+
+//for (int i = 0; i < map.mapSize; i++)
+//{
+//    for (int j = 0; j < map.mapSize; j++)
+//    {
+//        if (mousePos.x > i - .5f && mousePos.x < i + .5f &&
+//            mousePos.y < j + .5f && mousePos.y > j - .5f)
+//        {
+//            if(map.graph[j, i].gameObject.activeSelf == false)
+//                map.graph[j, i].gameObject.SetActive(true);
+//            else
+//                map.graph[j, i].gameObject.SetActive(false);
+//        }
+//    }
+//}

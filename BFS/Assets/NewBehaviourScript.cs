@@ -2,30 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public static class gCostExtensionMethod
-{
-    public static int G_Cost(this int input)
-    {
-        return input;
-    }
-}
-
-public static class hCostExtensionMethod
-{
-    public static int H_Cost(this int input)
-    {
-        return input;
-    }
-}
-
-public static class fCostExtensionMethod
-{
-    public static int F_Cost(this int input)
-    {
-        return input.G_Cost() + input.H_Cost();
-    }
-}
-
 public class Node
 {
     public int NodeCell { get; set; }
@@ -36,13 +12,10 @@ public class Node
     {
         get
         {
-            return f_Cost;
-        }
-        set
-        {
-            f_Cost = g_Cost + h_Cost;
+            return g_Cost + h_Cost;
         }
     }
+    public Node parent;
 }
 
 
@@ -77,12 +50,19 @@ public class NewBehaviourScript : MonoBehaviour
     List<Node> open = new List<Node>();
     List<int> openList = new List<int>();
     List<int> closed = new List<int>();
+    Node before4AStar;
+    Node neighbour;
+    Node[] neighbourArray;
 
     //Move
     Stack<int> hashStack = new Stack<int>();
     Hashtable hash = new Hashtable();
     int before;
     int poppedStack;
+    bool firstPop;
+    bool isMoving;
+    float moveX = 0;
+    float moveY = 0;
 
     //Algorithm selection
     bool isBFS;
@@ -135,11 +115,65 @@ public class NewBehaviourScript : MonoBehaviour
         isDFS = false;
         isAStar = false;
         StartCoroutine(Move());
+        firstPop = false;
+        isMoving = false;
+        neighbourArray = new Node[cell];
+        graph[(int)transform.position.y, (int)transform.position.x].gameObject.SetActive(false);
     }
 
     void Update()
     {
-        graph[(int)transform.position.y, (int)transform.position.x].gameObject.SetActive(false);
+        //if (isMoving)
+        //{
+        //    if (!firstPop && hashStack.Count != 0)
+        //    {
+        //        poppedStack = hashStack.Pop();
+        //        firstPop = true;
+        //    }
+        //    else
+        //    {
+        //        if (Vector3.Distance(transform.position, new Vector3(poppedStack % mapSize, poppedStack / mapSize, 0)) <= 0.4)
+        //        {
+        //            if (hashStack.Count != 0)
+        //            {
+        //                poppedStack = hashStack.Pop();
+        //            }
+        //        }
+        //    }
+
+        //    if (Vector3.Distance(transform.position, new Vector3(goalPos % mapSize, goalPos / mapSize)) <= 0.35)
+        //    {
+        //        print("arrive");
+        //        transform.position = new Vector3(poppedStack % mapSize, poppedStack / mapSize, 0);
+        //        transform.Translate(new Vector2(0, 0));
+        //        firstPop = false;
+        //        isMoving = false;
+        //    }
+        //    else
+        //    {
+        //        if (hashStack.Count >= 0)
+        //        {
+        //            if (poppedStack % mapSize > transform.position.x && poppedStack / mapSize > transform.position.y)
+        //                transform.Translate(5 * Time.deltaTime, 5 * Time.deltaTime, 0);
+        //            else if (poppedStack % mapSize > transform.position.x && poppedStack / mapSize == transform.position.y)
+        //                transform.Translate(5 * Time.deltaTime, 0, 0);
+        //            else if (poppedStack % mapSize > transform.position.x && poppedStack / mapSize < transform.position.y)
+        //                transform.Translate(5 * Time.deltaTime, -5 * Time.deltaTime, 0);
+        //            else if (poppedStack % mapSize == transform.position.x && poppedStack / mapSize < transform.position.y)
+        //                transform.Translate(0, -5 * Time.deltaTime, 0);
+        //            else if (poppedStack % mapSize < transform.position.x && poppedStack / mapSize < transform.position.y)
+        //                transform.Translate(-5 * Time.deltaTime, -5 * Time.deltaTime, 0);
+        //            else if (poppedStack % mapSize < transform.position.x && poppedStack / mapSize == transform.position.y)
+        //                transform.Translate(-5 * Time.deltaTime, 0, 0);
+        //            else if (poppedStack % mapSize < transform.position.x && poppedStack / mapSize > transform.position.y)
+        //                transform.Translate(-5 * Time.deltaTime, 5 * Time.deltaTime, 0);
+        //            else if (poppedStack % mapSize == transform.position.x && poppedStack / mapSize > transform.position.y)
+        //                transform.Translate(0, 5 * Time.deltaTime, 0);
+        //        }
+        //    }
+        //}
+
+
         for (int i = 0; i < mapSize; i++)
         {
             for (int j = 0; j < mapSize; j++)
@@ -170,6 +204,7 @@ public class NewBehaviourScript : MonoBehaviour
                                 startPos = ReturnCellNumber((int)transform.position.y, (int)transform.position.x);
                                 goalPos = ReturnCellNumber(j, i);
 
+                                isMoving = true;
                                 hash.Clear();
                                 hashStack.Clear();
                                 if (isBFS)
@@ -187,6 +222,8 @@ public class NewBehaviourScript : MonoBehaviour
                                     open.Clear();
                                     openList.Clear();
                                     closed.Clear();
+                                    for (int k = 0; k < neighbourArray.Length; k++)
+                                        neighbourArray[k] = null;
                                     AStar(startPos, goalPos);
                                 }
                             }
@@ -225,7 +262,10 @@ public class NewBehaviourScript : MonoBehaviour
 
 
                     if (before == startPos)
+                    {
+                        hashStack.Pop();
                         break;
+                    }
                 }
             }
 
@@ -282,7 +322,10 @@ public class NewBehaviourScript : MonoBehaviour
 
 
                     if (before == startPos)
+                    {
+                        hashStack.Pop();
                         break;
+                    }
                 }
             }
 
@@ -314,12 +357,9 @@ public class NewBehaviourScript : MonoBehaviour
     
     void AStar(int startPos, int goalPos)
     {
-        Node startNode = new Node { NodeCell = startPos };
+        Node startNode = new Node { NodeCell = startPos};
         Node goalNode = new Node { NodeCell = goalPos };
-
-        open = new List<Node>();
-        openList = new List<int>();
-        closed = new List<int>();
+        startNode.h_Cost = GetDistance(startNode, goalNode);
         open.Add(startNode);
         openList.Add(startNode.NodeCell);
 
@@ -328,43 +368,44 @@ public class NewBehaviourScript : MonoBehaviour
             Node current = open[0];
             for ( int i = 1; i < open.Count; i++)
             {
-                if (open[i].F_Cost <= current.F_Cost && open[i].h_Cost < current.h_Cost)
+                if ((open[i].F_Cost < current.F_Cost || open[i].F_Cost == current.F_Cost)  && open[i].h_Cost < current.h_Cost)
+                {
                     current = open[i];
+                }
             }
-            
             open.Remove(current);
             openList.Remove(current.NodeCell);
             closed.Add(current.NodeCell);
-            for(int m = 0; m < closed.Count; m++)
-                print("closed" + closed[m]);
-            for (int n = 0; n < open.Count; n++)
-                print("open" + open[n].NodeCell);
 
-            if (current.NodeCell == goalNode.NodeCell)
+            if (current.NodeCell == goalNode.NodeCell || current.h_Cost == 0)
             {
                 hashStack.Push(current.NodeCell);
-                before = (int)hash[current.NodeCell];
-                hashStack.Push(before);
+                before4AStar = current.parent;
+                hashStack.Push(before4AStar.NodeCell);
 
-                Debug.DrawLine(graph[current.NodeCell / mapSize, current.NodeCell % mapSize].position, graph[before / mapSize, before % mapSize].position, Color.red, 3);
+                Debug.DrawLine(graph[current.NodeCell / mapSize, current.NodeCell % mapSize].position, graph[before4AStar.NodeCell / mapSize, before4AStar.NodeCell % mapSize].position, Color.red, 3);
 
-                if (before == startPos)
+                if (before4AStar.NodeCell == startPos)
                     break;
                 while (true)
                 {
-                    Debug.DrawLine(graph[before / mapSize, before % mapSize].position, graph[(int)hash[before] / mapSize, (int)hash[before] % mapSize].position, Color.red, 3);
-                    before = (int)hash[before];
-                    hashStack.Push(before);
+                    Debug.DrawLine(graph[before4AStar.NodeCell / mapSize, before4AStar.NodeCell % mapSize].position, graph[before4AStar.parent.NodeCell / mapSize, before4AStar.parent.NodeCell % mapSize].position, Color.red, 3);
+                    before4AStar = before4AStar.parent;
+                    hashStack.Push(before4AStar.NodeCell);
 
-                    if (before == startPos)
+                    if (before4AStar.NodeCell == startPos)
+                    {
+                        hashStack.Pop();
                         break;
+                    }
                 }
-                //break;
+                break;
             }
 
             for (int k = 0; k < 8; k++)
             {
-                Node neighbour = new Node { NodeCell = current.NodeCell + direction[k] };
+                neighbour = new Node { NodeCell = current.NodeCell + direction[k] };
+                
 
                 if (Area(current.NodeCell, k)) continue;
 
@@ -375,35 +416,56 @@ public class NewBehaviourScript : MonoBehaviour
                         int numCheckPoint1 = current.NodeCell + direction[(k - 1) % 8];
                         int numCheckPoint2 = current.NodeCell + direction[(k + 1) % 8];
 
-                        if (Area(neighbour.NodeCell, k)) continue;
-
+                        if (Area(current.NodeCell, k)) continue;
                         if (map[numCheckPoint1 / mapSize, numCheckPoint1 % mapSize] == 0 && map[numCheckPoint2 / mapSize, numCheckPoint2 % mapSize] == 0) continue;
-                    }
-                    int newMoveCost;
-                    if (k == 0 || k == 2 || k == 4 || k == 6)
-                        newMoveCost = current.g_Cost + 10;
-                    else
-                        newMoveCost = current.g_Cost + 14;
-
-                    if(newMoveCost < neighbour.g_Cost || !openList.Contains(neighbour.NodeCell))
-                    {
-                        neighbour.g_Cost = newMoveCost;
-                        neighbour.h_Cost = (int)Vector3.Distance(new Vector3(neighbour.NodeCell % mapSize, neighbour.NodeCell / mapSize, 0), new Vector3(goalNode.NodeCell % mapSize, goalNode.NodeCell / mapSize, 0));
-                        print(current.NodeCell + " " + neighbour.NodeCell + " " + neighbour.g_Cost);
                         
+                    }
+                    
+                    if (neighbourArray[neighbour.NodeCell] == null)
+                    {
+                        neighbourArray[neighbour.NodeCell] = neighbour;
+                    }
+                    int newMoveCost = current.g_Cost + GetDistance(current, neighbour);
+                    if(newMoveCost < neighbourArray[neighbour.NodeCell].g_Cost || !openList.Contains(neighbour.NodeCell))
+                    {
+                        neighbourArray[neighbour.NodeCell].g_Cost = newMoveCost;
+                        neighbourArray[neighbour.NodeCell].h_Cost = GetDistance(neighbour, goalNode);
+                        
+                        neighbourArray[neighbour.NodeCell].parent = current;
                         if (!openList.Contains(neighbour.NodeCell))
                         {
-                            print(open.Contains(neighbour));
-                            open.Add(neighbour);
+                            open.Add(neighbourArray[neighbour.NodeCell]);
                             openList.Add(neighbour.NodeCell);
-                            
-                            print("added");
-                            hash.Add(neighbour.NodeCell, current.NodeCell);
                         }
                     }
                 }
             }
         }
+    }
+
+    //거리계산
+    int GetDistance(Node nodeA, Node nodeB)
+    {
+        //Mathf.Abs 절대값
+        int dstX = Mathf.Abs(nodeA.NodeCell % mapSize - nodeB.NodeCell % mapSize); 
+        int dstY = Mathf.Abs(nodeA.NodeCell / mapSize - nodeB.NodeCell / mapSize);
+
+        if (dstX > dstY)
+            return 14 * dstY + 10 * (dstX - dstY);
+        return 14 * dstX + 10 * (dstY - dstX);
+    }
+
+    void RetracePath(Node startNode, Node endNode)
+    {
+        List<Node> path = new List<Node>();
+        Node currentNode = endNode;
+
+        while(currentNode != startNode)
+        {
+            path.Add(currentNode);
+            currentNode = currentNode.parent;
+        }
+        path.Reverse();
     }
 
     bool Area(int cellNum, int k)
@@ -427,15 +489,19 @@ public class NewBehaviourScript : MonoBehaviour
         {
             if (hashStack.Count != 0)
             {
-                poppedStack = hashStack.Pop();
+                
+               poppedStack = hashStack.Pop();
+                  
                 transform.position = new Vector3(poppedStack % mapSize, poppedStack / mapSize, 0);
             }
+
             yield return new WaitForSeconds(0.1f);
         }
     }
 
     public void Click()
     {
+        graph[(int)transform.position.y, (int)transform.position.x].gameObject.SetActive(false);
         for (int i = 0; i < mapSize; i++)
         {
             for (int j = 0; j < mapSize; j++)
